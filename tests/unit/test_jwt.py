@@ -88,3 +88,31 @@ def test_unique_jti_per_token():
     p1    = decode_token(tok1, TokenType.ACCESS)
     p2    = decode_token(tok2, TokenType.ACCESS)
     assert p1["jti"] != p2["jti"]
+
+
+def test_payload_type_mismatch_raises():
+    """
+    Covers jwt.py line 77: a token signed with the ACCESS secret but with
+    type='refresh' in the payload hits the type-check branch and raises 401.
+    """
+    import uuid
+    from datetime import datetime, timedelta, timezone
+    from jose import jwt as jose_jwt
+    from app.core.config import get_settings
+    from fastapi import HTTPException
+    from app.auth.jwt import decode_token
+    from app.schemas.token import TokenType
+
+    cfg = get_settings()
+    payload = {
+        "sub":  str(uuid.uuid4()),
+        "type": "refresh",          # signed with ACCESS secret, but claims refresh
+        "exp":  datetime.now(timezone.utc) + timedelta(minutes=5),
+        "jti":  "type-mismatch-test",
+    }
+    token = jose_jwt.encode(payload, cfg.JWT_SECRET_KEY, algorithm=cfg.ALGORITHM)
+
+    with pytest.raises(HTTPException) as exc:
+        decode_token(token, TokenType.ACCESS)   # expects "access", gets "refresh"
+    assert exc.value.status_code == 401
+    assert "Invalid token type" in exc.value.detail
