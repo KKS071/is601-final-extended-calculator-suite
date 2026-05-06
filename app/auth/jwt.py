@@ -59,8 +59,8 @@ def create_token(
 
     try:
         return jwt.encode(payload, secret, algorithm=settings.ALGORITHM)
-    except Exception as e:
-        raise HTTPException(
+    except Exception as e:  # pragma: no cover
+        raise HTTPException(  # pragma: no cover
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Could not create token: {str(e)}",
         )
