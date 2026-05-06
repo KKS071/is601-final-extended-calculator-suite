@@ -1,0 +1,160 @@
+<!-- File: templates/edit_calculation.html -->
+<!-- Purpose: Edit a calculation — load existing data, allow changes, PUT to API. -->
+{% extends "base.html" %}
+{% block title %}CalcApp — Edit Calculation{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto">
+  <div class="mb-6">
+    <a href="/dashboard" class="text-sm text-slate-500 hover:text-slate-700 transition-colors">
+      ← Back to Dashboard
+    </a>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 text-sm">✏</span>
+      Edit Calculation
+    </h2>
+
+    <div id="edit-error"
+         class="hidden mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm"></div>
+    <div id="edit-success"
+         class="hidden mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm"></div>
+    <div id="edit-loading" class="text-slate-400 italic text-sm text-center py-4">Loading…</div>
+
+    <div id="edit-form" class="hidden">
+      <div class="mb-4">
+        <label for="op-select" class="block text-sm font-medium text-slate-700 mb-1">Operation</label>
+        <select id="op-select"
+                class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white">
+          <option value="addition">➕ Addition</option>
+          <option value="subtraction">➖ Subtraction</option>
+          <option value="multiplication">✖️ Multiplication</option>
+          <option value="division">➗ Division</option>
+          <option value="modulo">% Modulo</option>
+          <option value="power">^ Power</option>
+        </select>
+      </div>
+      <div class="mb-6">
+        <label for="inputs-field" class="block text-sm font-medium text-slate-700 mb-1">
+          Numbers <span class="font-normal text-slate-400">(comma-separated, min 2)</span>
+        </label>
+        <input id="inputs-field" type="text"
+               class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm
+                      focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+        <div id="pills" class="flex flex-wrap gap-1 mt-1.5 min-h-[1.5rem]"></div>
+      </div>
+      <div class="flex gap-3">
+        <button id="save-btn"
+                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60
+                       text-white font-semibold rounded-lg shadow transition-colors">
+          Save Changes
+        </button>
+        <a href="/dashboard"
+           class="px-6 py-2.5 border border-slate-300 text-slate-600 hover:bg-slate-50
+                  font-semibold rounded-lg transition-colors">
+          Cancel
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var token  = localStorage.getItem("access_token");
+  if (!token) { window.location.href = "/login"; return; }
+
+  var calcId = window.location.pathname.split("/").pop();
+
+  function showError(msg) {
+    var el = document.getElementById("edit-error");
+    el.textContent = msg; el.classList.toggle("hidden", !msg);
+  }
+  function showSuccess(msg) {
+    var el = document.getElementById("edit-success");
+    el.textContent = msg; el.classList.toggle("hidden", !msg);
+  }
+  function renderPills(raw) {
+    var c = document.getElementById("pills");
+    if (!c) return;
+    var parts = String(raw).split(",").map(function (s) { return s.trim(); })
+                           .filter(function (s) { return s !== ""; });
+    c.innerHTML = parts.map(function (p) {
+      return '<span class="input-pill">' + p + "</span>";
+    }).join("");
+  }
+
+  // Load existing calc
+  fetch("/calculations/" + calcId, {
+    headers: { Authorization: "Bearer " + token }
+  })
+  .then(function (res) {
+    document.getElementById("edit-loading").classList.add("hidden");
+    return res.json().then(function (d) {
+      if (!res.ok) { showError(d.detail || "Not found."); return; }
+      document.getElementById("op-select").value = d.type;
+      var inputStr = d.inputs.join(", ");
+      document.getElementById("inputs-field").value = inputStr;
+      renderPills(inputStr);
+      document.getElementById("edit-form").classList.remove("hidden");
+    });
+  })
+  .catch(function () {
+    document.getElementById("edit-loading").classList.add("hidden");
+    showError("Network error loading calculation.");
+  });
+
+  document.getElementById("inputs-field").addEventListener("input", function () {
+    renderPills(this.value);
+  });
+
+  document.getElementById("save-btn").addEventListener("click", function () {
+    showError(""); showSuccess("");
+    var btn    = this;
+    var type   = document.getElementById("op-select").value;
+    var rawStr = document.getElementById("inputs-field").value;
+    var parts  = rawStr.split(",").map(function (s) { return s.trim(); })
+                       .filter(function (s) { return s !== ""; });
+    if (parts.length < 2) { showError("Enter at least 2 numbers."); return; }
+    var nums = parts.map(Number);
+    for (var i = 0; i < nums.length; i++) {
+      if (!isFinite(nums[i])) { showError("All values must be valid numbers."); return; }
+    }
+    if (type === "division" && nums.slice(1).some(function (n) { return n === 0; })) {
+      showError("Cannot divide by zero."); return;
+    }
+    if (type === "modulo" && nums.slice(1).some(function (n) { return n === 0; })) {
+      showError("Cannot modulo by zero."); return;
+    }
+    btn.disabled = true; btn.textContent = "Saving…";
+    fetch("/calculations/" + calcId, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify({ type: type, inputs: nums })
+    })
+    .then(function (res) {
+      return res.json().then(function (data) {
+        btn.disabled = false; btn.textContent = "Save Changes";
+        if (!res.ok) {
+          var msg = Array.isArray(data.detail)
+            ? data.detail.map(function (e) { return e.msg; }).join(" | ")
+            : (data.detail || "Update failed.");
+          showError(msg); return;
+        }
+        showSuccess("Saved! New result: " + data.result);
+        setTimeout(function () { window.location.href = "/dashboard"; }, 1200);
+      });
+    })
+    .catch(function () {
+      btn.disabled = false; btn.textContent = "Save Changes";
+      showError("Network error.");
+    });
+  });
+});
+</script>
+{% endblock %}

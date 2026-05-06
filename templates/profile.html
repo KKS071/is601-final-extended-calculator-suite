@@ -1,0 +1,213 @@
+<!-- File: templates/profile.html -->
+<!-- Purpose: Profile page — update name/email/username and change password. -->
+{% extends "base.html" %}
+{% block title %}CalcApp — My Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto">
+
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-slate-900">My Profile</h2>
+    <p class="text-slate-500 text-sm mt-1">Update your account info or change your password.</p>
+  </div>
+
+  <!-- Profile card -->
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mb-6">
+    <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 text-sm">👤</span>
+      Account Info
+    </h3>
+
+    <div id="profile-error"
+         class="hidden mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm"></div>
+    <div id="profile-success"
+         class="hidden mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm"></div>
+
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label for="first_name" class="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+        <input id="first_name" type="text"
+               class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm
+                      focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+      </div>
+      <div>
+        <label for="last_name" class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+        <input id="last_name" type="text"
+               class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm
+                      focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+      </div>
+    </div>
+    <div class="mb-4">
+      <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+      <input id="email" type="email"
+             class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm
+                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+    <div class="mb-5">
+      <label for="username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+      <input id="username" type="text"
+             class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm
+                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+    <button id="save-profile-btn"
+            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60
+                   text-white font-semibold rounded-lg shadow transition-colors">
+      Save Changes
+    </button>
+  </div>
+
+  <!-- Password card -->
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 text-sm">🔑</span>
+      Change Password
+    </h3>
+
+    <div id="pwd-error"
+         class="hidden mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm"></div>
+    <div id="pwd-success"
+         class="hidden mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm"></div>
+
+    <div class="mb-4">
+      <label for="current_password" class="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
+      <input id="current_password" type="password"
+             class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm
+                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+    <div class="mb-4">
+      <label for="new_password" class="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+      <input id="new_password" type="password"
+             placeholder="Min 8 chars — upper, lower, digit, symbol"
+             class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm
+                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+    <div class="mb-5">
+      <label for="confirm_new_password" class="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
+      <input id="confirm_new_password" type="password"
+             class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm
+                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+    </div>
+    <button id="change-pwd-btn"
+            class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-60
+                   text-white font-semibold rounded-lg shadow transition-colors">
+      Change Password
+    </button>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  var token = localStorage.getItem("access_token");
+  if (!token) { window.location.href = "/login"; return; }
+
+  function apiFetch(url, opts) {
+    return fetch(url, Object.assign({}, opts || {}, {
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }
+    }));
+  }
+  function showMsg(id, msg, isError) {
+    var el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.toggle("hidden", !msg);
+    el.classList.toggle("bg-red-50",   isError);
+    el.classList.toggle("border-red-200",  isError);
+    el.classList.toggle("text-red-700",    isError);
+    el.classList.toggle("bg-green-50",  !isError);
+    el.classList.toggle("border-green-200", !isError);
+    el.classList.toggle("text-green-700",   !isError);
+  }
+
+  // Load current profile
+  apiFetch("/users/me").then(function (res) {
+    return res.json().then(function (u) {
+      if (!res.ok) return;
+      document.getElementById("first_name").value = u.first_name || "";
+      document.getElementById("last_name").value  = u.last_name  || "";
+      document.getElementById("email").value      = u.email      || "";
+      document.getElementById("username").value   = u.username   || "";
+    });
+  });
+
+  // Save profile
+  document.getElementById("save-profile-btn").addEventListener("click", function () {
+    showMsg("profile-error", "", false);
+    showMsg("profile-success", "", false);
+    var btn = this;
+    btn.disabled = true; btn.textContent = "Saving…";
+
+    var data = {};
+    var fn = document.getElementById("first_name").value.trim();
+    var ln = document.getElementById("last_name").value.trim();
+    var em = document.getElementById("email").value.trim();
+    var un = document.getElementById("username").value.trim();
+    if (fn) data.first_name = fn;
+    if (ln) data.last_name  = ln;
+    if (em) data.email      = em;
+    if (un) data.username   = un;
+
+    apiFetch("/users/me", { method: "PUT", body: JSON.stringify(data) })
+      .then(function (res) {
+        return res.json().then(function (u) {
+          btn.disabled = false; btn.textContent = "Save Changes";
+          if (!res.ok) {
+            var msg = Array.isArray(u.detail) ? u.detail.map(function (e) { return e.msg; }).join(" | ") : (u.detail || "Update failed.");
+            showMsg("profile-error", msg, true);
+            return;
+          }
+          showMsg("profile-success", "Profile updated successfully!", false);
+          if (u.username) localStorage.setItem("username", u.username);
+        });
+      })
+      .catch(function () {
+        btn.disabled = false; btn.textContent = "Save Changes";
+        showMsg("profile-error", "Network error.", true);
+      });
+  });
+
+  // Change password
+  document.getElementById("change-pwd-btn").addEventListener("click", function () {
+    showMsg("pwd-error", "", false);
+    showMsg("pwd-success", "", false);
+    var btn = this;
+    var cur  = document.getElementById("current_password").value;
+    var nw   = document.getElementById("new_password").value;
+    var cnw  = document.getElementById("confirm_new_password").value;
+
+    if (!cur || !nw || !cnw) { showMsg("pwd-error", "All fields are required.", true); return; }
+    if (nw !== cnw) { showMsg("pwd-error", "New passwords do not match.", true); return; }
+
+    btn.disabled = true; btn.textContent = "Changing…";
+
+    apiFetch("/users/me/password", {
+      method: "PUT",
+      body: JSON.stringify({ current_password: cur, new_password: nw, confirm_new_password: cnw })
+    })
+      .then(function (res) {
+        return res.json().then(function (d) {
+          btn.disabled = false; btn.textContent = "Change Password";
+          if (!res.ok) {
+            var msg = Array.isArray(d.detail) ? d.detail.map(function (e) { return e.msg; }).join(" | ") : (d.detail || "Failed.");
+            showMsg("pwd-error", msg, true);
+            return;
+          }
+          showMsg("pwd-success", "Password changed! Please log in again.", false);
+          document.getElementById("current_password").value = "";
+          document.getElementById("new_password").value = "";
+          document.getElementById("confirm_new_password").value = "";
+          setTimeout(function () {
+            localStorage.clear(); window.location.href = "/login";
+          }, 2000);
+        });
+      })
+      .catch(function () {
+        btn.disabled = false; btn.textContent = "Change Password";
+        showMsg("pwd-error", "Network error.", true);
+      });
+  });
+});
+</script>
+{% endblock %}
