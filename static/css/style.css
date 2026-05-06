@@ -1,0 +1,40 @@
+/* File: static/css/style.css
+   Purpose: Minimal custom overrides — everything else is Tailwind. */
+
+/* Smooth focus ring */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+}
+
+/* Input pill */
+.input-pill {
+  display: inline-block;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 9999px;
+  padding: 0.1rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin: 0.1rem 0.1rem 0.1rem 0;
+}
+
+/* Operation type badges */
+.badge-addition       { background: #dcfce7; color: #15803d; }
+.badge-subtraction    { background: #fef9c3; color: #a16207; }
+.badge-multiplication { background: #dbeafe; color: #1d4ed8; }
+.badge-division       { background: #fce7f3; color: #9d174d; }
+.badge-modulo         { background: #f3e8ff; color: #7e22ce; }
+.badge-power          { background: #ffedd5; color: #c2410c; }
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+/* Table rows */
+.calc-table td { vertical-align: middle; }
