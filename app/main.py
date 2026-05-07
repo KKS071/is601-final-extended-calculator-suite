@@ -42,11 +42,60 @@ async def lifespan(app: FastAPI):
     yield
 
 
+# OpenAPI tag groups shown in Swagger UI sidebar
+_tags_metadata = [
+    {
+        "name": "auth",
+        "description": (
+            "Register and log in. "
+            "**Use the `Authorize` button** (🔒) at the top of this page: "
+            "enter your `username` and `password`, click *Authorize*, then all "
+            "protected routes will automatically include your Bearer token."
+        ),
+    },
+    {
+        "name": "users",
+        "description": "Read and update the current user's profile and password.",
+    },
+    {
+        "name": "calculations",
+        "description": (
+            "Full BREAD operations on calculations plus an aggregate stats endpoint. "
+            "Supported types: `addition`, `subtraction`, `multiplication`, "
+            "`division`, `modulo`, `power`."
+        ),
+    },
+    {
+        "name": "health",
+        "description": "Service liveness check.",
+    },
+    {
+        "name": "web",
+        "description": "HTML page routes served to the browser — not intended for API clients.",
+    },
+]
+
 app = FastAPI(
     title="CalcApp API",
-    description="FastAPI calculator with BREAD operations, JWT auth, stats, and profile management.",
+    description=(
+        "## CalcApp — IS601 Final Project\n\n"
+        "A production-quality calculator API with JWT authentication, "
+        "full BREAD operations (six operation types), history stats, and "
+        "profile management.\n\n"
+        "### Quick start\n"
+        "1. **Register** via `POST /auth/register`\n"
+        "2. **Authorize** — click the 🔒 button, enter credentials, click *Authorize*\n"
+        "3. **Try any protected route** — the Bearer token is added automatically\n"
+    ),
     version="3.0.0",
     lifespan=lifespan,
+    openapi_tags=_tags_metadata,
+    swagger_ui_parameters={
+        "defaultModelsExpandDepth": -1,      # hide schemas section by default
+        "persistAuthorization": True,        # keep token after page refresh
+        "tryItOutEnabled": True,             # open "Try it out" by default
+        "displayRequestDuration": True,      # show response time
+    },
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -166,7 +215,7 @@ def login_json(user_login: UserLogin, db: Session = Depends(get_db)):
     )
 
 
-@app.post("/auth/token", tags=["auth"], summary="Login (form — Swagger UI)")
+@app.post("/auth/token", tags=["auth"], summary="Login (form — Swagger UI)", response_model=dict)
 def login_form(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),

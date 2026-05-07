@@ -9,7 +9,8 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.token import TokenType
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+# tokenUrl must match the /auth/token endpoint exactly (leading slash = absolute path)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
 def get_current_user(

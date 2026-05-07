@@ -2,7 +2,7 @@
 # Purpose: Pydantic schemas for creating, updating, and returning calculations.
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -101,7 +101,7 @@ class CalculationUpdate(BaseModel):
 class CalculationResponse(CalculationBase):
     id:         UUID
     user_id:    UUID
-    result:     float
+    result:     Optional[float] = None  # nullable until first compute
     created_at: datetime
     updated_at: datetime
 
