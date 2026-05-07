@@ -1,5 +1,6 @@
 <!-- File: templates/edit_calculation.html -->
-<!-- Purpose: Edit a calculation — load existing data, allow changes, PUT to API. -->
+<!-- Purpose: Edit a calculation — load existing data, allow changes, PUT to API.
+     Enter key in the numbers field (or operation dropdown) triggers Save. -->
 {% extends "base.html" %}
 {% block title %}CalcApp — Edit Calculation{% endblock %}
 
@@ -71,6 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var calcId = window.location.pathname.split("/").pop();
 
+  /* ── Helpers ──────────────────────────────────────────────────────── */
   function showError(msg) {
     var el = document.getElementById("edit-error");
     el.textContent = msg; el.classList.toggle("hidden", !msg);
@@ -89,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }).join("");
   }
 
-  // Load existing calc
+  /* ── Load existing calculation ────────────────────────────────────── */
   fetch("/calculations/" + calcId, {
     headers: { Authorization: "Bearer " + token }
   })
@@ -109,21 +111,26 @@ document.addEventListener("DOMContentLoaded", function () {
     showError("Network error loading calculation.");
   });
 
+  /* ── Live pill preview ────────────────────────────────────────────── */
   document.getElementById("inputs-field").addEventListener("input", function () {
     renderPills(this.value);
   });
 
-  document.getElementById("save-btn").addEventListener("click", function () {
+  /* ── Save handler ─────────────────────────────────────────────────── */
+  function doSave() {
     showError(""); showSuccess("");
-    var btn    = this;
+    var btn    = document.getElementById("save-btn");
     var type   = document.getElementById("op-select").value;
     var rawStr = document.getElementById("inputs-field").value;
     var parts  = rawStr.split(",").map(function (s) { return s.trim(); })
                        .filter(function (s) { return s !== ""; });
+
     if (parts.length < 2) { showError("Enter at least 2 numbers."); return; }
     var nums = parts.map(Number);
     for (var i = 0; i < nums.length; i++) {
-      if (!isFinite(nums[i])) { showError("All values must be valid numbers."); return; }
+      if (!isFinite(nums[i]) || isNaN(nums[i])) {
+        showError("All values must be valid numbers."); return;
+      }
     }
     if (type === "division" && nums.slice(1).some(function (n) { return n === 0; })) {
       showError("Cannot divide by zero."); return;
@@ -131,7 +138,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (type === "modulo" && nums.slice(1).some(function (n) { return n === 0; })) {
       showError("Cannot modulo by zero."); return;
     }
+
     btn.disabled = true; btn.textContent = "Saving…";
+
     fetch("/calculations/" + calcId, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
@@ -154,6 +163,19 @@ document.addEventListener("DOMContentLoaded", function () {
       btn.disabled = false; btn.textContent = "Save Changes";
       showError("Network error.");
     });
+  }
+
+  /* ── Button click handler ─────────────────────────────────────────── */
+  document.getElementById("save-btn").addEventListener("click", doSave);
+
+  /* ── Enter key: numbers input → Save ─────────────────────────────── */
+  document.getElementById("inputs-field").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); doSave(); }
+  });
+
+  /* ── Enter key: operation select → Save ──────────────────────────── */
+  document.getElementById("op-select").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); doSave(); }
   });
 });
 </script>

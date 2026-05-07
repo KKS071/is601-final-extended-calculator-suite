@@ -1,5 +1,6 @@
 <!-- File: templates/profile.html -->
-<!-- Purpose: Profile page — update name/email/username and change password. -->
+<!-- Purpose: Profile page — update name/email/username and change password.
+     Enter key on any profile field triggers Save; on any password field triggers Change. -->
 {% extends "base.html" %}
 {% block title %}CalcApp — My Profile{% endblock %}
 
@@ -104,6 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var token = localStorage.getItem("access_token");
   if (!token) { window.location.href = "/login"; return; }
 
+  /* ── Helpers ──────────────────────────────────────────────────────── */
   function apiFetch(url, opts) {
     return fetch(url, Object.assign({}, opts || {}, {
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }
@@ -111,17 +113,18 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   function showMsg(id, msg, isError) {
     var el = document.getElementById(id);
+    if (!el) return;
     el.textContent = msg;
-    el.classList.toggle("hidden", !msg);
-    el.classList.toggle("bg-red-50",   isError);
-    el.classList.toggle("border-red-200",  isError);
-    el.classList.toggle("text-red-700",    isError);
-    el.classList.toggle("bg-green-50",  !isError);
-    el.classList.toggle("border-green-200", !isError);
-    el.classList.toggle("text-green-700",   !isError);
+    el.classList.toggle("hidden",          !msg);
+    el.classList.toggle("bg-red-50",        !!msg &&  isError);
+    el.classList.toggle("border-red-200",   !!msg &&  isError);
+    el.classList.toggle("text-red-700",     !!msg &&  isError);
+    el.classList.toggle("bg-green-50",      !!msg && !isError);
+    el.classList.toggle("border-green-200", !!msg && !isError);
+    el.classList.toggle("text-green-700",   !!msg && !isError);
   }
 
-  // Load current profile
+  /* ── Load current profile ─────────────────────────────────────────── */
   apiFetch("/users/me").then(function (res) {
     return res.json().then(function (u) {
       if (!res.ok) return;
@@ -132,11 +135,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Save profile
-  document.getElementById("save-profile-btn").addEventListener("click", function () {
+  /* ── Save profile ─────────────────────────────────────────────────── */
+  function doSaveProfile() {
     showMsg("profile-error", "", false);
     showMsg("profile-success", "", false);
-    var btn = this;
+    var btn = document.getElementById("save-profile-btn");
     btn.disabled = true; btn.textContent = "Saving…";
 
     var data = {};
@@ -154,7 +157,9 @@ document.addEventListener("DOMContentLoaded", function () {
         return res.json().then(function (u) {
           btn.disabled = false; btn.textContent = "Save Changes";
           if (!res.ok) {
-            var msg = Array.isArray(u.detail) ? u.detail.map(function (e) { return e.msg; }).join(" | ") : (u.detail || "Update failed.");
+            var msg = Array.isArray(u.detail)
+              ? u.detail.map(function (e) { return e.msg; }).join(" | ")
+              : (u.detail || "Update failed.");
             showMsg("profile-error", msg, true);
             return;
           }
@@ -166,19 +171,19 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.disabled = false; btn.textContent = "Save Changes";
         showMsg("profile-error", "Network error.", true);
       });
-  });
+  }
 
-  // Change password
-  document.getElementById("change-pwd-btn").addEventListener("click", function () {
+  /* ── Change password ──────────────────────────────────────────────── */
+  function doChangePassword() {
     showMsg("pwd-error", "", false);
     showMsg("pwd-success", "", false);
-    var btn = this;
-    var cur  = document.getElementById("current_password").value;
-    var nw   = document.getElementById("new_password").value;
-    var cnw  = document.getElementById("confirm_new_password").value;
+    var btn = document.getElementById("change-pwd-btn");
+    var cur = document.getElementById("current_password").value;
+    var nw  = document.getElementById("new_password").value;
+    var cnw = document.getElementById("confirm_new_password").value;
 
     if (!cur || !nw || !cnw) { showMsg("pwd-error", "All fields are required.", true); return; }
-    if (nw !== cnw) { showMsg("pwd-error", "New passwords do not match.", true); return; }
+    if (nw !== cnw)           { showMsg("pwd-error", "New passwords do not match.", true); return; }
 
     btn.disabled = true; btn.textContent = "Changing…";
 
@@ -190,13 +195,15 @@ document.addEventListener("DOMContentLoaded", function () {
         return res.json().then(function (d) {
           btn.disabled = false; btn.textContent = "Change Password";
           if (!res.ok) {
-            var msg = Array.isArray(d.detail) ? d.detail.map(function (e) { return e.msg; }).join(" | ") : (d.detail || "Failed.");
+            var msg = Array.isArray(d.detail)
+              ? d.detail.map(function (e) { return e.msg; }).join(" | ")
+              : (d.detail || "Failed.");
             showMsg("pwd-error", msg, true);
             return;
           }
-          showMsg("pwd-success", "Password changed! Please log in again.", false);
-          document.getElementById("current_password").value = "";
-          document.getElementById("new_password").value = "";
+          showMsg("pwd-success", "Password changed! Redirecting to login…", false);
+          document.getElementById("current_password").value     = "";
+          document.getElementById("new_password").value         = "";
           document.getElementById("confirm_new_password").value = "";
           setTimeout(function () {
             localStorage.clear(); window.location.href = "/login";
@@ -207,6 +214,24 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.disabled = false; btn.textContent = "Change Password";
         showMsg("pwd-error", "Network error.", true);
       });
+  }
+
+  /* ── Button click handlers ────────────────────────────────────────── */
+  document.getElementById("save-profile-btn").addEventListener("click", doSaveProfile);
+  document.getElementById("change-pwd-btn").addEventListener("click", doChangePassword);
+
+  /* ── Enter key: profile fields ────────────────────────────────────── */
+  ["first_name", "last_name", "email", "username"].forEach(function (id) {
+    document.getElementById(id).addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); doSaveProfile(); }
+    });
+  });
+
+  /* ── Enter key: password fields ───────────────────────────────────── */
+  ["current_password", "new_password", "confirm_new_password"].forEach(function (id) {
+    document.getElementById(id).addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); doChangePassword(); }
+    });
   });
 });
 </script>
