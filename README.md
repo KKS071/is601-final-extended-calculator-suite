@@ -221,20 +221,22 @@ alembic downgrade -1
 ```
 .
 ├── app/
-│   ├── auth/           # JWT utilities + FastAPI dependencies
-│   ├── core/           # Settings (pydantic-settings)
-│   ├── models/         # SQLAlchemy models (User, Calculation subtypes)
-│   ├── schemas/        # Pydantic schemas
-│   ├── database.py     # Engine + session factory
+│   ├── auth/               # JWT utilities + FastAPI dependencies
+│   ├── core/               # Settings (pydantic-settings)
+│   ├── models/             # SQLAlchemy models (User, Calculation subtypes)
+│   ├── schemas/            # Pydantic schemas
+│   ├── database.py         # Engine + session factory
 │   ├── database_init.py
-│   ├── main.py         # All routes
-│   └── operations.py   # Pure arithmetic functions
-├── static/             # CSS + JS
-├── templates/          # Jinja2 HTML templates
+│   ├── main.py             # All routes
+│   └── operations.py       # Pure arithmetic functions
+├── docs/
+│   └── docs/REFLECTION.md       # Project reflection and lessons learned
+├── static/                 # CSS + JS
+├── templates/              # Jinja2 HTML templates
 ├── tests/
-│   ├── unit/           # Pure logic tests
-│   ├── integration/    # API + DB tests
-│   └── e2e/            # Playwright tests
+│   ├── unit/               # Pure logic tests
+│   ├── integration/        # API + DB tests
+│   └── e2e/                # Playwright tests
 ├── .github/workflows/ci.yml
 ├── Dockerfile
 ├── docker-compose.yml
