@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!token) { window.location.href = "/login"; return; }
 
   var g = document.getElementById("user-greeting");
-  if (g) g.textContent = localStorage.getItem("username") || "there";
+  if (g) g.textContent = localStorage.getItem("full_name") || localStorage.getItem("username") || "there";
 
   /* ── Helpers ─────────────────────────────────────────────────── */
   function showCalcError(msg) {
@@ -197,7 +197,9 @@ document.addEventListener("DOMContentLoaded", function () {
         return res.json().then(function (s) {
           document.getElementById("stat-total").textContent = s.total_count;
           document.getElementById("stat-avg").textContent =
-            s.average_result !== null ? parseFloat(s.average_result).toFixed(2) : "N/A";
+            s.average_operand_count !== null && s.average_operand_count !== undefined
+              ? parseFloat(s.average_operand_count).toFixed(1) + " / calc"
+              : "N/A";
           // top type
           var topType = "—";
           if (s.by_type && Object.keys(s.by_type).length > 0) {
