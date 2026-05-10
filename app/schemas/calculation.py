@@ -110,9 +110,9 @@ class CalculationResponse(CalculationBase):
 
 class CalculationStatsResponse(BaseModel):
     """Aggregated stats for the current user's calculation history."""
-    total_count:    int
-    by_type:        Dict[str, int]
-    average_result: Optional[float]
-    last_5:         List[CalculationResponse]
+    total_count:          int
+    by_type:              Dict[str, int]
+    average_operand_count: Optional[float]   # avg number of inputs per calculation
+    last_5:               List[CalculationResponse]
 
     model_config = ConfigDict(from_attributes=True)

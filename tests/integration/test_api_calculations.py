@@ -241,7 +241,7 @@ def test_stats_empty(client, auth_headers):
     assert resp.status_code == 200
     data = resp.json()
     assert data["total_count"] == 0
-    assert data["average_result"] is None
+    assert data["average_operand_count"] is None
     assert data["last_5"] == []
 
 def test_stats_after_calculations(client, auth_headers):
@@ -254,7 +254,7 @@ def test_stats_after_calculations(client, auth_headers):
     data = resp.json()
     assert data["total_count"] >= 4
     assert "addition" in data["by_type"]
-    assert data["average_result"] is not None
+    assert data["average_operand_count"] is not None
     assert len(data["last_5"]) <= 5
 
 def test_stats_no_auth(client):

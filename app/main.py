@@ -343,8 +343,12 @@ def get_stats(
     for c in calcs:
         by_type[c.type] = by_type.get(c.type, 0) + 1
 
-    results = [c.result for c in calcs if c.result is not None]
-    avg_result: Optional[float] = (sum(results) / len(results)) if results else None
+    # Average operand count: how many input numbers the user typically uses per calc.
+    # e.g. 2.0 means they mostly use two-number operations; 3.5 means multi-value.
+    operand_counts = [len(c.inputs) for c in calcs if isinstance(c.inputs, list)]
+    avg_operand_count: Optional[float] = (
+        round(sum(operand_counts) / len(operand_counts), 2)
+    ) if operand_counts else None
 
     last_5 = (
         db.query(Calculation)
@@ -357,7 +361,7 @@ def get_stats(
     return CalculationStatsResponse(
         total_count=len(calcs),
         by_type=by_type,
-        average_result=avg_result,
+        average_operand_count=avg_operand_count,
         last_5=last_5,
     )
 
