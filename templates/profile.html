@@ -232,11 +232,10 @@ document.addEventListener("DOMContentLoaded", function () {
             showMsg("profile-error", msg, true); return;
           }
           showMsg("profile-success", "Profile updated successfully!", false);
-          if (u.username) localStorage.setItem("username", u.username);
-          if (u.first_name || u.last_name) {
-            var fullName = ((u.first_name || "") + " " + (u.last_name || "")).trim();
-            if (fullName) localStorage.setItem("full_name", fullName);
-          }
+          // Always sync localStorage so dashboard reflects the new name immediately
+          if (u.username)   localStorage.setItem("username",  u.username);
+          var updatedName = ((u.first_name || "") + " " + (u.last_name || "")).trim();
+          localStorage.setItem("full_name", updatedName || localStorage.getItem("full_name") || "");
         });
       })
       .catch(function () {

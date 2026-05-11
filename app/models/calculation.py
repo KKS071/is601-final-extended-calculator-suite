@@ -2,7 +2,7 @@
 # Purpose: SQLAlchemy models for calculations — single-table polymorphic inheritance.
 #          Platform-independent GUID type works with PostgreSQL and SQLite.
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 from sqlalchemy import Column, DateTime, Float, ForeignKey, JSON, String, CHAR
@@ -67,11 +67,11 @@ class AbstractCalculation:
 
     @declared_attr
     def created_at(cls):
-        return Column(DateTime, default=datetime.utcnow, nullable=False)
+        return Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     @declared_attr
     def updated_at(cls):
-        return Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+        return Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     @declared_attr
     def user(cls):

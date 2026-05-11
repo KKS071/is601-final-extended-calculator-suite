@@ -230,7 +230,7 @@ alembic downgrade -1
 │   ├── main.py             # All routes
 │   └── operations.py       # Pure arithmetic functions
 ├── docs/
-│   └── REFLECTION.md       # Project reflection and lessons learned
+│   └── docs/REFLECTION.md       # Project reflection and lessons learned
 ├── static/                 # CSS + JS
 ├── templates/              # Jinja2 HTML templates
 ├── tests/

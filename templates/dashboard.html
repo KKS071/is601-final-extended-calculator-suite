@@ -27,15 +27,15 @@
 <!-- ── Stats banner ──────────────────────────────────────────────────── -->
 <div id="stats-banner" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
   <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Total Calculations</div>
+    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Total</div>
     <div id="stat-total" class="text-2xl font-bold text-slate-800">—</div>
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Avg Inputs/Calc</div>
+    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Avg Result</div>
     <div id="stat-avg" class="text-2xl font-bold text-blue-600">—</div>
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Top Calc Type</div>
+    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Top Type</div>
     <div id="stat-top-type" class="text-2xl font-bold text-slate-800">—</div>
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
@@ -134,8 +134,25 @@ document.addEventListener("DOMContentLoaded", function () {
   var token = localStorage.getItem("access_token");
   if (!token) { window.location.href = "/login"; return; }
 
+  /* Show cached name immediately, then refresh from API ─────────── */
   var g = document.getElementById("user-greeting");
   if (g) g.textContent = localStorage.getItem("full_name") || localStorage.getItem("username") || "there";
+
+  // Fetch fresh profile so any name change on the Profile page is
+  // reflected immediately — even after a plain browser refresh.
+  fetch("/users/me", { headers: { Authorization: "Bearer " + token } })
+    .then(function (res) {
+      if (!res.ok) return;
+      return res.json().then(function (u) {
+        var freshName = ((u.first_name || "") + " " + (u.last_name || "")).trim();
+        var display   = freshName || u.username || localStorage.getItem("username") || "there";
+        // Persist to localStorage so subsequent page loads are instant
+        if (freshName) localStorage.setItem("full_name", freshName);
+        if (u.username) localStorage.setItem("username", u.username);
+        if (g) g.textContent = display;
+      });
+    })
+    .catch(function () { /* network error — keep cached name */ });
 
   /* ── Helpers ─────────────────────────────────────────────────── */
   function showCalcError(msg) {

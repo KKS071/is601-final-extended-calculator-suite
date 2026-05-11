@@ -113,41 +113,37 @@ def read_health():
 
 @app.get("/", response_class=HTMLResponse, tags=["web"])
 def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 @app.get("/login", response_class=HTMLResponse, tags=["web"])
 def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request, "login.html")
 
 
 @app.get("/register", response_class=HTMLResponse, tags=["web"])
 def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse(request, "register.html")
 
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["web"])
 def dashboard_page(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse(request, "dashboard.html")
 
 
 @app.get("/profile", response_class=HTMLResponse, tags=["web"])
 def profile_page(request: Request):
-    return templates.TemplateResponse("profile.html", {"request": request})
+    return templates.TemplateResponse(request, "profile.html")
 
 
 @app.get("/dashboard/view/{calc_id}", response_class=HTMLResponse, tags=["web"])
 def view_page(request: Request, calc_id: str):
-    return templates.TemplateResponse(
-        "view_calculation.html", {"request": request, "calc_id": calc_id}
-    )
+    return templates.TemplateResponse(request, "view_calculation.html", {"calc_id": calc_id})
 
 
 @app.get("/dashboard/edit/{calc_id}", response_class=HTMLResponse, tags=["web"])
 def edit_page(request: Request, calc_id: str):
-    return templates.TemplateResponse(
-        "edit_calculation.html", {"request": request, "calc_id": calc_id}
-    )
+    return templates.TemplateResponse(request, "edit_calculation.html", {"calc_id": calc_id})
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
@@ -505,7 +501,7 @@ def update_calculation(
                 type=new_type,
                 inputs=new_inputs,
                 result=new_result,
-                updated_at=datetime.utcnow(),
+                updated_at=datetime.now(timezone.utc),
             )
         )
         db.commit()
