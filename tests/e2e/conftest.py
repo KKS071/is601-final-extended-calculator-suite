@@ -1,6 +1,6 @@
 # File: tests/e2e/conftest.py
 # Purpose: Session-scoped fixture that starts a real uvicorn server on
-#          http://127.0.0.1:8000 before any E2E test runs, then tears it down.
+#          http://127.0.0.1:8001 before any E2E test runs, then tears it down.
 #
 # Why a live server instead of TestClient?
 #   Playwright drives a real Chromium browser which needs an actual HTTP port.
@@ -22,8 +22,8 @@ from sqlalchemy import create_engine
 from app.core.config import get_settings
 from app.database import Base
 
-_BASE_URL = "http://127.0.0.1:8000"
-_PORT     = 8000
+_BASE_URL = "http://127.0.0.1:8001"
+_PORT     = 8001 # separate port so it never collides with a dev server on 8000
 _TIMEOUT  = 20  # seconds to wait for the server to become healthy
 
 
