@@ -216,7 +216,7 @@ Profile updates check for email and username conflicts before applying changes, 
 | **Functionality** | All six BREAD operations work flawlessly across six calculation types. Stats, profile update, password change, and all extra features are fully functional and tested. |
 | **Code Quality & Organization** | Single-table polymorphic ORM, factory pattern, Pydantic v2 validators, clean route handlers, zero code duplication across test fixtures, consistent naming throughout. |
 | **Security** | bcrypt password hashing, HS256 JWT with separate access/refresh secrets, token type verification, zero-divisor validation at schema level, ownership isolation returning 404, 409 conflict detection, non-root Docker user. |
-| **Testing** | 254 tests across unit, integration, and E2E layers. 100% coverage of `app/`. Zero warnings. Playwright tests cover all user journeys including edge cases. Negative tests throughout. |
+| **Testing** | 265 tests across unit, integration, and E2E layers. 100% coverage of `app/`. Zero warnings. Playwright tests cover all user journeys including edge cases. Negative tests throughout. |
 | **CI/CD Pipeline** | Three-stage GitHub Actions pipeline: test with coverage → Trivy filesystem scan → multi-stage Docker build and push with SHA tagging, followed by image scan. |
 | **Documentation** | README covers every required section in depth. Reflection demonstrates genuine understanding of architectural trade-offs, testing strategy, and security decisions. |
 | **Front-End Integration** | TailwindCSS dashboard with live stats, colour-coded badges, input pill preview, password toggle with SVG eye icons, Enter-key support on all forms, full-name welcome banner synced live from the API. |
