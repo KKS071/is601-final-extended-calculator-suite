@@ -47,9 +47,11 @@ All six operation types support multiple inputs (e.g., `[10, 5, 3]`):
 
 ### Extra Features
 
-1. **Aggregated Stats (`GET /calculations/stats`)** — total count, per-type breakdown, average result, last 5 calculations.
+1. **Aggregated Stats (`GET /calculations/stats`)** — total count, top calculation-type, average number of inputs per calculation, types of operation performed.
 2. **Profile Management (`PUT /users/me`)** — update name, email, or username.
 3. **Password Change (`PUT /users/me/password`)** — verifies current password before applying new one.
+4. **Added additional calculation types - Power & Modulo**
+5. **Allows users to view entered values in the password field**
 
 ---
 
@@ -107,7 +109,7 @@ ReDoc: http://localhost:8000/redoc
 ## Test Instructions
 
 ```bash
-# Run all unit + integration tests with coverage
+# Run all unit + integration + e2e tests with coverage
 pytest
 
 # Run with verbose output
@@ -230,7 +232,7 @@ alembic downgrade -1
 │   ├── main.py             # All routes
 │   └── operations.py       # Pure arithmetic functions
 ├── docs/
-│   └── docs/REFLECTION.md       # Project reflection and lessons learned
+│   └── REFLECTION.md       # Project reflection and lessons learned
 ├── static/                 # CSS + JS
 ├── templates/              # Jinja2 HTML templates
 ├── tests/
