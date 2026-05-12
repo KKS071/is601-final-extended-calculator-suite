@@ -51,7 +51,7 @@ All six operation types support multiple inputs (e.g., `[10, 5, 3]`):
 2. **Profile Management (`PUT /users/me`)** — update name, email, or username.
 3. **Password Change (`PUT /users/me/password`)** — verifies current password before applying new one.
 4. **Added additional calculation types - Power & Modulo**
-5. **Allows users to view entered values in the password field**
+5. **Optionally Allows users to view entered values in the password field by clicking on Eye Icon**
 
 ---
 
