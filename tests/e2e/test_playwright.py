@@ -14,7 +14,7 @@ import uuid
 import pytest
 from playwright.sync_api import Page, expect
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:8001"
 PASSWORD = "SecureE2E123!"
 
 
