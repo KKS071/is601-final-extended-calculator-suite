@@ -1,5 +1,8 @@
 # CalcApp — IS601 Final Project
 
+[![CI](https://github.com/KKS071/is601-final-extended-calculator-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/KKS071/is601-final-extended-calculator-suite/actions)
+[![Docker](https://img.shields.io/docker/v/kks59/is601-final-extended-calculator-suite?label=Docker%20Hub)](https://hub.docker.com/r/kks59/is601-final-extended-calculator-suite)
+
 **IS601 — Python for Web API Development | NJIT**
 
 A production-quality calculator web application built with FastAPI, PostgreSQL, JWT authentication, and full BREAD operations. Deployed via Docker with an automated GitHub Actions CI/CD pipeline.
