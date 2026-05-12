@@ -58,8 +58,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
           pip install -r requirements.txt
+          playwright install  # if you use Playwright for e2e tests
 
       - name: Run pytest with coverage
         env:
@@ -72,12 +75,23 @@ jobs:
           REFRESH_TOKEN_EXPIRE_DAYS:   "7"
           BCRYPT_ROUNDS:             "4"
         run: |
-          pytest \
-            --cov=app \
-            --cov-report=term-missing \
-            --cov-report=xml:coverage.xml \
-            --ignore=tests/e2e \
-            -v
+          source venv/bin/activate
+          
+          # 1) Unit tests
+          pytest tests/unit/ --cov=src --junitxml=test-results/junit.xml
+          
+          # 2) Integration tests
+          pytest tests/integration/
+          
+          # 3) E2E or other tests
+          pytest tests/e2e/
+          
+          # pytest \
+          #   --cov=app \
+          #   --cov-report=term-missing \
+          #   --cov-report=xml:coverage.xml \
+          #   #--ignore=tests/e2e \
+          #   #-v
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
