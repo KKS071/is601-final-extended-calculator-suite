@@ -1,7 +1,7 @@
-# Reflection — IS601 Final Project
+# Reflection — IS601 Final Project - Spring 2026
 
 **CalcApp Extended Calculator Suite**  
-**Student:** KKS071 | **Course:** IS601 — Python for Web API Development | **School:** NJIT
+**Student:** **Kundan Singh** | **Course:** IS601 — Python for Web API Development | **School:** NJIT
 
 ---
 
