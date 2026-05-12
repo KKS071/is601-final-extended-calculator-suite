@@ -12,7 +12,7 @@ This project is a full-stack web application that lets authenticated users perfo
 Beyond the calculations themselves, the app implements:
 - Full BREAD (Browse, Read, Edit, Add, Delete) on the `/calculations` resource
 - JWT-based authentication with access and refresh tokens
-- Per-user calculation history with aggregated stats (total count, by-type breakdown, average result, last 5 entries)
+- Per-user calculation history with aggregated stats (total count, top calculation-type, average number of inputs per calculation, types of operation performed.)
 - User profile management (update name / email / username, and a dedicated password-change flow)
 - A TailwindCSS-styled frontend served by Jinja2 templates
 
@@ -40,7 +40,7 @@ I aimed for 100% coverage using three layers:
 
 **E2E tests** (`tests/e2e/`) use Playwright to drive a real Chromium browser against a live server. They test full user journeys: register → login → add calculations → view → edit → delete → logout. These run separately (excluded from CI coverage collection) to avoid requiring a running server in the test job.
 
-**Negative testing** is present throughout: wrong passwords, missing tokens, invalid UUIDs, duplicate emails, too-few inputs, zero divisors, and unauthorized access to other users' data.
+**Negative testing** is present throughout: wrong passwords, missing tokens, invalid UUIDs, password mismatch while changing, new password same as old one, password too small, authentication denied on wrong password or username, duplicate emails, too-few inputs, zero divisors, and unauthorized access to other users' data.
 
 ---
 
@@ -52,7 +52,7 @@ The GitHub Actions pipeline (`ci.yml`) has three jobs that run sequentially:
 2. **Trivy:** Runs `aquasecurity/trivy-action` on the filesystem to scan for CRITICAL and HIGH CVEs in dependencies. Non-blocking (`exit-code: 0`) to avoid breaking the build on unresolvable transitive vulnerabilities, while still surfacing findings in the Actions log.
 3. **Docker:** Builds a multi-stage Docker image (builder stage installs wheels, final stage copies only the wheels and app code), pushes to `kks59/is601-final-extended-calculator-suite` on Docker Hub, then runs a second Trivy scan on the pushed image.
 
-The Docker image uses a non-root user (`appuser`) and a `HEALTHCHECK` instruction that pings `/health`. Secrets (`DOCKERHUB_TOKEN`, `JWT_SECRET_KEY`) are stored in a GitHub `production` environment and never appear in logs.
+The Docker image uses a non-root user (`appuser`) and a `HEALTHCHECK` instruction that pings `/health`. Secrets (`DOCKERHUB_TOKEN`, `DOCKERHUB_USERNAME`) are stored in a GitHub `production` environment and never appear in logs.
 
 ---
 
