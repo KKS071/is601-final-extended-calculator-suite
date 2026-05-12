@@ -20,7 +20,7 @@
 
 1. [Overview](#overview)
 2. [Features](#features)
-3. [Extra Features Beyond Requirements](#extra-features-beyond-requirements)
+3. [Additional Required Features and Extra Features Beyond Requirements](#additional-required-features-and-extra-features-beyond-requirements)
 4. [Tech Stack](#tech-stack)
 5. [Project Structure](#project-structure)
 6. [Local Setup](#local-setup)
@@ -80,7 +80,7 @@ All types support **two or more operands** applied left-to-right:
 
 ---
 
-## Extra Features Beyond Requirements
+## Additional Required Features and Extra Features Beyond Requirements
 
 ### 1 — Modulo Operation (`type: "modulo"`)
 
@@ -347,23 +347,27 @@ xdg-open htmlcov/index.html      # Linux
 
 The `TESTING=1` flag prevents the FastAPI lifespan from trying to connect to PostgreSQL on startup — the test suite uses an in-memory SQLite database via SQLAlchemy's `StaticPool`, so no database server is required.
 
-**Current result: 254 tests, 0 failures, 100% coverage.**
+**Current result: 265 tests, 0 failures, 100% coverage.**
 
-### End-to-End Tests (requires running server)
+### End-to-End Tests (server starts automatically)
+
+The E2E test suite manages its own live server — no manual startup is needed.
+`tests/e2e/conftest.py` starts a Uvicorn server on **port 8001** before the first
+E2E test and shuts it down after the last one.
 
 ```bash
-# Install the Playwright browser (one-time)
+# Install the Playwright browser (one-time setup)
 playwright install chromium
 
-# Start the app (in a separate terminal)
-uvicorn app.main:app --reload
+# Run E2E tests alongside unit + integration tests (recommended)
+pytest
 
-# Run E2E tests
+# Run only E2E tests
 pytest tests/e2e/ --browser chromium
-
-# Run headless (CI-friendly)
-pytest tests/e2e/ --browser chromium --headless
 ```
+
+> **Port 8001** is used deliberately so the test server never conflicts with a
+> development server you may have running on port 8000.
 
 E2E tests cover: register, login, dashboard BREAD operations (including modulo and power), profile page data loading, unauthenticated redirects, and logout.
 
@@ -484,8 +488,12 @@ The pipeline is defined in `.github/workflows/ci.yml` and runs on every push or 
 |--------|---------|
 | `DOCKERHUB_USERNAME` | Docker Hub login |
 | `DOCKERHUB_TOKEN` | Docker Hub push authentication |
-| `JWT_SECRET_KEY` | JWT signing in the test stage |
-| `JWT_REFRESH_SECRET_KEY` | Refresh token signing in the test stage |
+
+> **What about `JWT_SECRET_KEY` and `JWT_REFRESH_SECRET_KEY`?**
+> These are **not** required as GitHub Secrets. Locally they live in your `.env` file.
+> In CI, `app/core/config.py` defines safe built-in default values that are used
+> automatically whenever the secrets are not explicitly provided — so the test suite
+> runs correctly without them being added to GitHub.
 
 ---
 
