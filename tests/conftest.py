@@ -1,5 +1,8 @@
 # File: tests/conftest.py
 # Purpose: Shared fixtures — SQLite in-memory (StaticPool) for fast, isolated tests.
+import os
+os.environ.setdefault("TESTING", "1")  # prevent lifespan from hitting Postgres
+
 import uuid
 import pytest
 from faker import Faker

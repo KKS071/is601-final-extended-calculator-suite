@@ -31,8 +31,8 @@ def unique_user():
 
 def _register_and_login(user: dict) -> str:
     """Helper: register + login via API, return access token."""
-    import requests
-    requests.post(f"{BASE_URL}/auth/register", json={
+    import httpx
+    httpx.post(f"{BASE_URL}/auth/register", json={
         "first_name":       user["first_name"],
         "last_name":        user["last_name"],
         "email":            user["email"],
@@ -40,7 +40,7 @@ def _register_and_login(user: dict) -> str:
         "password":         PASSWORD,
         "confirm_password": PASSWORD,
     })
-    resp = requests.post(f"{BASE_URL}/auth/login",
+    resp = httpx.post(f"{BASE_URL}/auth/login",
                          json={"username": user["username"], "password": PASSWORD})
     return resp.json()["access_token"]
 

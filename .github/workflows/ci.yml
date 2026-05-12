@@ -1,5 +1,5 @@
 # File: .github/workflows/ci.yml
-# Purpose: CI/CD — test → Trivy scan → Docker build → Docker Hub push.
+# Purpose: CI/CD — test (unit + integration + E2E) → Trivy scan → Docker build+push.
 
 name: CI/CD Pipeline
 
@@ -20,6 +20,7 @@ jobs:
     environment: production
 
     services:
+      # Main database — used by the live E2E server
       postgres:
         image: postgres:16-alpine
         env:
@@ -33,6 +34,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      # Test database — kept for compatibility with direct Postgres test runs
       test_postgres:
         image: postgres:16-alpine
         env:
@@ -61,23 +63,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run pytest with coverage
+      # Install Chromium for Playwright E2E tests.
+      # --with-deps installs the OS-level libraries Chromium needs on Ubuntu.
+      - name: Install Playwright browser (Chromium)
+        run: playwright install chromium --with-deps
+
+      - name: Run all tests with coverage (unit + integration + E2E)
         env:
-          DATABASE_URL:              postgresql://postgres:postgres@localhost:5432/fastapi_db
-          TEST_DATABASE_URL:         postgresql://postgres:postgres@localhost:5433/fastapi_test_db
-          JWT_SECRET_KEY:            ${{ secrets.JWT_SECRET_KEY }}
-          JWT_REFRESH_SECRET_KEY:    ${{ secrets.JWT_REFRESH_SECRET_KEY }}
-          ALGORITHM:                 HS256
+          DATABASE_URL:                postgresql://postgres:postgres@localhost:5432/fastapi_db
+          TEST_DATABASE_URL:           postgresql://postgres:postgres@localhost:5433/fastapi_test_db
+          JWT_SECRET_KEY:              ${{ secrets.JWT_SECRET_KEY }}
+          JWT_REFRESH_SECRET_KEY:      ${{ secrets.JWT_REFRESH_SECRET_KEY }}
+          ALGORITHM:                   HS256
           ACCESS_TOKEN_EXPIRE_MINUTES: "30"
           REFRESH_TOKEN_EXPIRE_DAYS:   "7"
-          BCRYPT_ROUNDS:             "4"
-        run: |
-          pytest \
-            --cov=app \
-            --cov-report=term-missing \
-            --cov-report=xml:coverage.xml \
-            --ignore=tests/e2e \
-            -v
+          # Lower bcrypt rounds in CI to keep test run fast
+          BCRYPT_ROUNDS:               "4"
+        run: pytest
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -98,11 +100,11 @@ jobs:
       - name: Run Trivy filesystem scan
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type:    fs
-          scan-ref:     .
-          severity:     CRITICAL,HIGH
-          exit-code:    "0"
-          format:       table
+          scan-type:      fs
+          scan-ref:       .
+          severity:       CRITICAL,HIGH
+          exit-code:      "0"
+          format:         table
           ignore-unfixed: true
 
   # ── 3. Build & Push Docker Image ──────────────────────────────────────────────
@@ -117,7 +119,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      # Set up Docker Buildx — required for cache export (type=gha) and
+      # multi-platform builds. The default "docker" driver does NOT support
+      # GHA cache; the "docker-container" driver created by this action does.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -125,7 +131,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata (tags/labels)
+      - name: Extract metadata (tags & labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -137,18 +143,18 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context:   .
-          push:      true
-          tags:      ${{ steps.meta.outputs.tags }}
-          labels:    ${{ steps.meta.outputs.labels }}
+          context:    .
+          push:       true
+          tags:       ${{ steps.meta.outputs.tags }}
+          labels:     ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to:   type=gha,mode=max
 
       - name: Run Trivy image scan after push
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref:  ${{ env.IMAGE_NAME }}:latest
-          severity:   CRITICAL,HIGH
-          exit-code:  "0"
-          format:     table
+          image-ref:      ${{ env.IMAGE_NAME }}:latest
+          severity:       CRITICAL,HIGH
+          exit-code:      "0"
+          format:         table
           ignore-unfixed: true
